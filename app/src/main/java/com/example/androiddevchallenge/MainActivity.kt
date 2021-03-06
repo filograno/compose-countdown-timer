@@ -18,12 +18,22 @@ package com.example.androiddevchallenge
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.example.androiddevchallenge.ui.theme.MyTheme
+import com.example.androiddevchallenge.ui.theme.typography
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,11 +46,43 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
+enum class CountdownState {
+    START, STOP
+}
+
 // Start building your app here!
 @Composable
 fun MyApp() {
     Surface(color = MaterialTheme.colors.background) {
-        Text(text = "Ready... Set... GO!")
+        var countdownState by rememberSaveable { mutableStateOf(CountdownState.STOP) }
+        Timer(seconds = 60, countdownState = countdownState) {
+            countdownState = when (countdownState) {
+                CountdownState.START -> CountdownState.STOP
+                CountdownState.STOP -> CountdownState.START
+            }
+        }
+    }
+}
+
+@Composable
+fun Timer(seconds: Int, countdownState: CountdownState, onCountdownStateChange: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxHeight()
+            .fillMaxWidth(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = seconds.toString(), style = typography.h1)
+        Spacer(modifier = Modifier.height(16.dp))
+        val buttonText = when (countdownState) {
+            CountdownState.START -> "Stop"
+            CountdownState.STOP -> "Start"
+        }
+        Button(onClick = onCountdownStateChange) {
+            Text(text = buttonText, style = typography.h3)
+        }
     }
 }
 
@@ -48,7 +90,10 @@ fun MyApp() {
 @Composable
 fun LightPreview() {
     MyTheme {
-        MyApp()
+        Timer(
+            seconds = 60,
+            countdownState = CountdownState.STOP,
+            onCountdownStateChange = { })
     }
 }
 
@@ -56,6 +101,9 @@ fun LightPreview() {
 @Composable
 fun DarkPreview() {
     MyTheme(darkTheme = true) {
-        MyApp()
+        Timer(
+            seconds = 60,
+            countdownState = CountdownState.STOP,
+            onCountdownStateChange = { })
     }
 }

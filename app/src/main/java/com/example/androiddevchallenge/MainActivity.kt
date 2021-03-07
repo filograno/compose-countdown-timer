@@ -147,7 +147,7 @@ fun Timer(
             onClickUp = onClickUp,
             onClickDown = onClickDown
         )
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(64.dp))
         Crossfade(targetState = countdownState) { state ->
             val drawable = when (state) {
                 CountdownState.START -> R.drawable.ic_pause_24

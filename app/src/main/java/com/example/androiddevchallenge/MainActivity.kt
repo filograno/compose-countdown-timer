@@ -97,6 +97,9 @@ fun MyApp() {
                             countDownTimer = null
                         }
                         CountdownState.STOP -> {
+                            if (seconds == 0) {
+                                return@Timer
+                            }
                             countdownState = CountdownState.START
                             startSeconds = seconds
                             countDownTimer = object : CountDownTimer(

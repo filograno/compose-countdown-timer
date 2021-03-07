@@ -19,6 +19,7 @@ import android.os.Bundle
 import android.os.CountDownTimer
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -37,6 +38,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.androiddevchallenge.ui.theme.MyTheme
@@ -108,12 +110,12 @@ fun Timer(seconds: Int, countdownState: CountdownState, onCountdownStateChange: 
     ) {
         Text(text = seconds.toString(), style = typography.h1)
         Spacer(modifier = Modifier.height(16.dp))
-        val buttonText = when (countdownState) {
-            CountdownState.START -> "Stop"
-            CountdownState.STOP -> "Start"
+        val drawable = when (countdownState) {
+            CountdownState.START -> R.drawable.ic_pause_24
+            CountdownState.STOP -> R.drawable.ic_play_24
         }
         Button(onClick = onCountdownStateChange) {
-            Text(text = buttonText, style = typography.h3)
+            Image(painter = painterResource(id = drawable), contentDescription = null)
         }
     }
 }
@@ -125,7 +127,8 @@ fun LightPreview() {
         Timer(
             seconds = 60,
             countdownState = CountdownState.STOP,
-            onCountdownStateChange = { })
+            onCountdownStateChange = { }
+        )
     }
 }
 
@@ -136,6 +139,7 @@ fun DarkPreview() {
         Timer(
             seconds = 60,
             countdownState = CountdownState.STOP,
-            onCountdownStateChange = { })
+            onCountdownStateChange = { }
+        )
     }
 }

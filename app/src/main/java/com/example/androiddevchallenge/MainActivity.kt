@@ -20,6 +20,7 @@ import android.os.CountDownTimer
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,7 +32,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,10 +43,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.androiddevchallenge.ui.theme.MyTheme
-import com.example.androiddevchallenge.ui.theme.typography
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
+    @ExperimentalAnimationApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -62,45 +62,58 @@ enum class CountdownState {
 }
 
 // Start building your app here!
+@ExperimentalAnimationApi
 @Composable
 fun MyApp() {
     Surface(color = MaterialTheme.colors.background) {
         var countdownState by rememberSaveable { mutableStateOf(CountdownState.STOP) }
-        var seconds by rememberSaveable { mutableStateOf(60) }
+        var seconds by rememberSaveable { mutableStateOf(59) }
         var countDownTimer: CountDownTimer? by rememberSaveable { mutableStateOf(null) }
         val millisInASecond = TimeUnit.SECONDS.toMillis(1L)
 
-        Timer(seconds = seconds, countdownState = countdownState) {
-            when (countdownState) {
-                CountdownState.START -> {
-                    countdownState = CountdownState.STOP
-                    countDownTimer?.cancel()
-                    countDownTimer = null
-                }
-                CountdownState.STOP -> {
-                    countdownState = CountdownState.START
-                    countDownTimer = object : CountDownTimer(
-                        seconds * millisInASecond,
-                        millisInASecond
-                    ) {
-                        override fun onTick(millisUntilFinished: Long) {
-                            seconds = (millisUntilFinished / millisInASecond).toInt() + 1
-                        }
-
-                        override fun onFinish() {
-                            seconds = 0
-                            countdownState = CountdownState.STOP
-                        }
+        Timer(
+            seconds = seconds,
+            countdownState = countdownState,
+            onClickUp = { seconds = (seconds + 1) % 60 },
+            onClickDown = { seconds = if (seconds - 1 >= 0) seconds - 1 else 59 },
+            onCountdownStateChange = {
+                when (countdownState) {
+                    CountdownState.START -> {
+                        countdownState = CountdownState.STOP
+                        countDownTimer?.cancel()
+                        countDownTimer = null
                     }
-                    countDownTimer?.start()
+                    CountdownState.STOP -> {
+                        countdownState = CountdownState.START
+                        countDownTimer = object : CountDownTimer(
+                            seconds * millisInASecond,
+                            millisInASecond
+                        ) {
+                            override fun onTick(millisUntilFinished: Long) {
+                                seconds = (millisUntilFinished / millisInASecond).toInt() + 1
+                            }
+
+                            override fun onFinish() {
+                                seconds = 0
+                                countdownState = CountdownState.STOP
+                            }
+                        }
+                        countDownTimer?.start()
+                    }
                 }
-            }
-        }
+            })
     }
 }
 
+@ExperimentalAnimationApi
 @Composable
-fun Timer(seconds: Int, countdownState: CountdownState, onCountdownStateChange: () -> Unit) {
+fun Timer(
+    seconds: Int,
+    countdownState: CountdownState,
+    onClickUp: () -> Unit,
+    onClickDown: () -> Unit,
+    onCountdownStateChange: () -> Unit
+) {
     Column(
         modifier = Modifier
             .padding(16.dp)
@@ -109,8 +122,13 @@ fun Timer(seconds: Int, countdownState: CountdownState, onCountdownStateChange: 
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = seconds.toString(), style = typography.h1)
-        Spacer(modifier = Modifier.height(16.dp))
+        TimerItem(
+            showButtons = countdownState == CountdownState.STOP,
+            time = seconds,
+            onClickUp = onClickUp,
+            onClickDown = onClickDown
+        )
+        Spacer(modifier = Modifier.height(32.dp))
         Crossfade(targetState = countdownState) { state ->
             val drawable = when (state) {
                 CountdownState.START -> R.drawable.ic_pause_24
@@ -126,6 +144,7 @@ fun Timer(seconds: Int, countdownState: CountdownState, onCountdownStateChange: 
     }
 }
 
+@ExperimentalAnimationApi
 @Preview("Light Theme", widthDp = 360, heightDp = 640)
 @Composable
 fun LightPreview() {
@@ -133,11 +152,14 @@ fun LightPreview() {
         Timer(
             seconds = 60,
             countdownState = CountdownState.STOP,
+            onClickUp = { },
+            onClickDown = { },
             onCountdownStateChange = { }
         )
     }
 }
 
+@ExperimentalAnimationApi
 @Preview("Dark Theme", widthDp = 360, heightDp = 640)
 @Composable
 fun DarkPreview() {
@@ -145,6 +167,8 @@ fun DarkPreview() {
         Timer(
             seconds = 60,
             countdownState = CountdownState.STOP,
+            onClickUp = { },
+            onClickDown = { },
             onCountdownStateChange = { }
         )
     }

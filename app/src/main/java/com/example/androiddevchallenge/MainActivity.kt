@@ -16,9 +16,16 @@
 package com.example.androiddevchallenge
 
 import android.os.Bundle
+import android.os.CountDownTimer
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
@@ -34,6 +41,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.androiddevchallenge.ui.theme.MyTheme
 import com.example.androiddevchallenge.ui.theme.typography
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,10 +63,34 @@ enum class CountdownState {
 fun MyApp() {
     Surface(color = MaterialTheme.colors.background) {
         var countdownState by rememberSaveable { mutableStateOf(CountdownState.STOP) }
-        Timer(seconds = 60, countdownState = countdownState) {
-            countdownState = when (countdownState) {
-                CountdownState.START -> CountdownState.STOP
-                CountdownState.STOP -> CountdownState.START
+        var seconds by rememberSaveable { mutableStateOf(60) }
+        var countDownTimer: CountDownTimer? by rememberSaveable { mutableStateOf(null) }
+        val millisInASecond = TimeUnit.SECONDS.toMillis(1L)
+
+        Timer(seconds = seconds, countdownState = countdownState) {
+            when (countdownState) {
+                CountdownState.START -> {
+                    countdownState = CountdownState.STOP
+                    countDownTimer?.cancel()
+                    countDownTimer = null
+                }
+                CountdownState.STOP -> {
+                    countdownState = CountdownState.START
+                    countDownTimer = object : CountDownTimer(
+                        seconds * millisInASecond,
+                        millisInASecond
+                    ) {
+                        override fun onTick(millisUntilFinished: Long) {
+                            seconds = (millisUntilFinished / millisInASecond).toInt() + 1
+                        }
+
+                        override fun onFinish() {
+                            seconds = 0
+                            countdownState = CountdownState.STOP
+                        }
+                    }
+                    countDownTimer?.start()
+                }
             }
         }
     }

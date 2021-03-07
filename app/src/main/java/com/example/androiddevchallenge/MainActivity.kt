@@ -19,6 +19,7 @@ import android.os.Bundle
 import android.os.CountDownTimer
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -110,12 +111,17 @@ fun Timer(seconds: Int, countdownState: CountdownState, onCountdownStateChange: 
     ) {
         Text(text = seconds.toString(), style = typography.h1)
         Spacer(modifier = Modifier.height(16.dp))
-        val drawable = when (countdownState) {
-            CountdownState.START -> R.drawable.ic_pause_24
-            CountdownState.STOP -> R.drawable.ic_play_24
-        }
-        Button(onClick = onCountdownStateChange) {
-            Image(painter = painterResource(id = drawable), contentDescription = null)
+        Crossfade(targetState = countdownState) { state ->
+            val drawable = when (state) {
+                CountdownState.START -> R.drawable.ic_pause_24
+                CountdownState.STOP -> R.drawable.ic_play_24
+            }
+            Button(onClick = onCountdownStateChange) {
+                Image(
+                    painter = painterResource(id = drawable),
+                    contentDescription = null
+                )
+            }
         }
     }
 }

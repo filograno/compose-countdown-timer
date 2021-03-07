@@ -19,8 +19,10 @@ import android.os.Bundle
 import android.os.CountDownTimer
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -30,6 +32,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
+import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
@@ -67,41 +70,58 @@ enum class CountdownState {
 fun MyApp() {
     Surface(color = MaterialTheme.colors.background) {
         var countdownState by rememberSaveable { mutableStateOf(CountdownState.STOP) }
+        var startSeconds by rememberSaveable { mutableStateOf(59) }
         var seconds by rememberSaveable { mutableStateOf(59) }
         var countDownTimer: CountDownTimer? by rememberSaveable { mutableStateOf(null) }
         val millisInASecond = TimeUnit.SECONDS.toMillis(1L)
 
-        Timer(
-            seconds = seconds,
-            countdownState = countdownState,
-            onClickUp = { seconds = (seconds + 1) % 60 },
-            onClickDown = { seconds = if (seconds - 1 >= 0) seconds - 1 else 59 },
-            onCountdownStateChange = {
-                when (countdownState) {
-                    CountdownState.START -> {
-                        countdownState = CountdownState.STOP
-                        countDownTimer?.cancel()
-                        countDownTimer = null
-                    }
-                    CountdownState.STOP -> {
-                        countdownState = CountdownState.START
-                        countDownTimer = object : CountDownTimer(
-                            seconds * millisInASecond,
-                            millisInASecond
-                        ) {
-                            override fun onTick(millisUntilFinished: Long) {
-                                seconds = (millisUntilFinished / millisInASecond).toInt() + 1
-                            }
+        val progress by animateFloatAsState(targetValue = seconds.toFloat() / startSeconds)
 
-                            override fun onFinish() {
-                                seconds = 0
-                                countdownState = CountdownState.STOP
-                            }
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Timer(
+                seconds = seconds,
+                countdownState = countdownState,
+                onClickUp = { seconds = (seconds + 1) % 60 },
+                onClickDown = { seconds = if (seconds - 1 >= 0) seconds - 1 else 59 },
+                onCountdownStateChange = {
+                    when (countdownState) {
+                        CountdownState.START -> {
+                            countdownState = CountdownState.STOP
+                            countDownTimer?.cancel()
+                            countDownTimer = null
                         }
-                        countDownTimer?.start()
+                        CountdownState.STOP -> {
+                            countdownState = CountdownState.START
+                            startSeconds = seconds
+                            countDownTimer = object : CountDownTimer(
+                                seconds * millisInASecond,
+                                millisInASecond
+                            ) {
+                                override fun onTick(millisUntilFinished: Long) {
+                                    seconds = (millisUntilFinished / millisInASecond).toInt() + 1
+                                }
+
+                                override fun onFinish() {
+                                    seconds = 0
+                                    countdownState = CountdownState.STOP
+                                }
+                            }
+                            countDownTimer?.start()
+                        }
                     }
                 }
-            })
+            )
+            AnimatedVisibility(countdownState == CountdownState.START) {
+                Spacer(modifier = Modifier.height(32.dp))
+                LinearProgressIndicator(progress = progress)
+            }
+        }
     }
 }
 
@@ -117,7 +137,6 @@ fun Timer(
     Column(
         modifier = Modifier
             .padding(16.dp)
-            .fillMaxHeight()
             .fillMaxWidth(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -150,7 +169,7 @@ fun Timer(
 fun LightPreview() {
     MyTheme {
         Timer(
-            seconds = 60,
+            seconds = 59,
             countdownState = CountdownState.STOP,
             onClickUp = { },
             onClickDown = { },
@@ -165,7 +184,7 @@ fun LightPreview() {
 fun DarkPreview() {
     MyTheme(darkTheme = true) {
         Timer(
-            seconds = 60,
+            seconds = 59,
             countdownState = CountdownState.STOP,
             onClickUp = { },
             onClickDown = { },
